@@ -18,6 +18,8 @@ Pacman agents (in searchAgents.py).
 """
 
 import util
+import searchProblems
+
 
 class SearchProblem:
     """
@@ -88,70 +90,72 @@ def depthFirstSearch(problem):
     """
     "*** YOUR CODE HERE ***"
     start = problem.getStartState()
-    c = problem.getStartState()
-    exploredState = []
-    exploredState.append(start)
-    states = util.Stack()
-    stateTuple = (start, [])
-    states.push(stateTuple)
-    while not states.isEmpty() and not problem.isGoalState(c):
-        state, actions = states.pop()
-        exploredState.append(state)
-        successor = problem.getSuccessors(state)
-        for i in successor:
-            coordinates = i[0]
-            if not coordinates in exploredState:
-                c = i[0]
-                direction = i[1]
-                states.push((coordinates, actions + [direction]))
-    return actions + [direction]
-    util.raiseNotDefined()
+    explored_states = set()
+    unexplored_states = util.Stack()
+    unexplored_states.push((start, []))
+
+    while not unexplored_states.isEmpty():
+        current_state, actions = unexplored_states.pop()
+
+        if problem.isGoalState(current_state):
+            return actions, current_state
+
+        if current_state not in explored_states:
+            explored_states.add(current_state)
+
+            for neighbor in problem.getSuccessors(current_state):
+                if neighbor[0] not in explored_states:
+                    unexplored_states.push((neighbor[0], actions + [neighbor[1]]))
+
+    return []
 
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
     "*** YOUR CODE HERE ***"
+
     start = problem.getStartState()
-    exploredState = []
-    exploredState.append(start)
-    states = util.Queue()
-    stateTuple = (start, [])
-    states.push(stateTuple)
-    while not states.isEmpty():
-        state, action = states.pop()
-        if problem.isGoalState(state):
-            return action, state
-        successor = problem.getSuccessors(state)
-        for i in successor:
-            coordinates = i[0]
-            if not coordinates in exploredState:
-                direction = i[1]
-                exploredState.append(coordinates)
-                states.push((coordinates, action + [direction]))
-    return action
-    util.raiseNotDefined()
+    explored_states = set()
+    unexplored_states = util.Queue()
+    unexplored_states.push((start, []))
+
+    while not unexplored_states.isEmpty():
+        current_state, actions = unexplored_states.pop()
+
+        if problem.isGoalState(current_state):
+            return actions, current_state
+
+        if current_state not in explored_states:
+            explored_states.add(current_state)
+
+            for neighbor in problem.getSuccessors(current_state):
+                if neighbor[0] not in explored_states:
+                    unexplored_states.push((neighbor[0], actions + [neighbor[1]]))
+
+    return []
 
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
     "*** YOUR CODE HERE ***"
+
     start = problem.getStartState()
-    exploredState = []
-    states = util.PriorityQueue()
-    states.push((start, []) ,0)
-    while not states.isEmpty():
-        state, actions = states.pop()
-        if problem.isGoalState(state):
-            return actions
-        if state not in exploredState:
-            successors = problem.getSuccessors(state)
-            for succ in successors:
-                coordinates = succ[0]
-                if coordinates not in exploredState:
-                    directions = succ[1]
-                    newCost = actions + [directions]
-                    states.push((coordinates, actions + [directions]), problem.getCostOfActions(newCost))
-        exploredState.append(state)
-    return actions
-    util.raiseNotDefined()
+    explored_states = set()
+    unexplored_states = util.PriorityQueue()
+
+    unexplored_states.push((start, []), 0)
+
+    while not unexplored_states.isEmpty():
+        current_state, actions = unexplored_states.pop()
+        if problem.isGoalState(current_state):
+            return actions, current_state
+        if current_state not in explored_states:
+            explored_states.add(current_state)
+
+            for neighbor in problem.getSuccessors(current_state):
+                if neighbor[0] not in explored_states:
+                    travel_cost = problem.getCostOfActions(actions + [neighbor[1]])
+                    unexplored_states.push((neighbor[0], actions + [neighbor[1]]), travel_cost)
+
+    return []
 
 def nullHeuristic(state, problem=None):
     """
@@ -164,26 +168,32 @@ def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
     "*** YOUR CODE HERE ***"
     start = problem.getStartState()
-    exploredState = []
-    states = util.PriorityQueue()
-    states.push((start, []), nullHeuristic(start, problem))
-    nCost = 0
-    while not states.isEmpty():
-        state, actions = states.pop()
-        if problem.isGoalState(state):
-            return actions
-        if state not in exploredState:
-            successors = problem.getSuccessors(state)
-            for succ in successors:
-                coordinates = succ[0]
-                if coordinates not in exploredState:
-                    directions = succ[1]
-                    nActions = actions + [directions]
-                    nCost = problem.getCostOfActions(nActions) + heuristic(coordinates, problem)
-                    states.push((coordinates, actions + [directions]), nCost)
-        exploredState.append(state)
-    return actions
-    util.raiseNotDefined()
+    explored_states = set()
+    unexplored_states = util.PriorityQueue()
+
+    unexplored_states.push((start, []), 0)
+
+    while not unexplored_states.isEmpty():
+        current_state, actions = unexplored_states.pop()
+
+        if problem.isGoalState(current_state):
+            if isinstance(problem, searchProblems.PositionSearchProblem):
+                return actions
+            else:
+                return actions, current_state
+
+        if current_state not in explored_states:
+            explored_states.add(current_state)
+
+            for neighbor in problem.getSuccessors(current_state):
+                if neighbor[0] not in explored_states:
+                    travel_cost = problem.getCostOfActions(actions + [neighbor[1]]) + heuristic(neighbor[0], problem)
+                    unexplored_states.push((neighbor[0], actions + [neighbor[1]]), travel_cost)
+
+
+
+    return []
+
 
 
 # Abbreviations
