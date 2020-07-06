@@ -31,12 +31,33 @@ class MyAgent(Agent):
     Implementation of your agent.
     """
 
+    def myHeuristic(self, exploring_position, problem):
+        foodList = problem.food.asList()
+        distance = 0.0
+
+        if len(foodList) == 0:
+            return distance
+
+        for food in foodList:
+
+            tmpDistance = ((exploring_position[0] - food[0]) ** 2 + (exploring_position[1] - food[1]) ** 2) ** 0.5
+
+            if tmpDistance > distance:
+                distance = tmpDistance
+
+        return distance
+
+
+
+
+
     def getAction(self, state):
         """
         Returns the next action the agent will take
         """
 
         "*** YOUR CODE HERE ***"
+
         if len(self.actions) != 0:
             next_action = self.actions[0]
             self.actions = self.actions[1:]
@@ -46,20 +67,18 @@ class MyAgent(Agent):
             # walls = state.getWalls()
             problem = AnyFoodSearchProblem(state, self.index)
             pacman_states = state.getPacmanStates()
-            action_list, goal_coords = search.bfs(problem)
-            # print(startPosition)
+            action_list, goal_coords = search.ucs(problem)
 
             numOfActions = len(action_list)
 
-            # other_pacman = []
-            for i in range(len(pacman_states)):
-                if startPosition == pacman_states[i].configuration.pos:
+            for pacman_state in pacman_states:
+                if startPosition == pacman_state.configuration.pos:
                     continue
                 else:
-                    if pacman_states[i].configuration.direction == 'Stop' and self.actionsTaken != 0:
+                    if pacman_state.configuration.direction == 'Stop' and self.actionsTaken != 0:
                         continue
                     else:
-                        mazeDist = mazeDistance(pacman_states[i].configuration.pos, goal_coords, state)
+                        mazeDist = mazeDistance(pacman_state.configuration.pos, goal_coords, state)
 
                         if mazeDist <= numOfActions:
                             action_list = ['Stop'] * numOfActions
@@ -100,27 +119,10 @@ class ClosestDotAgent(Agent):
         food = gameState.getFood()
         walls = gameState.getWalls()
         problem = AnyFoodSearchProblem(gameState, self.index)
-        pacman_positions = gameState.getPacmanPositions()
-        actionList, goalCoords = search.bfs(problem)
 
-        # print(startPosition,actionList)
         "*** YOUR CODE HERE ***"
 
-
-        other_pacman = []
-        for i in range(len(pacman_positions)):
-            position = pacman_positions[i]
-            if startPosition == position:
-                continue
-            else:
-                other_pacman.append(position)
-        for p in other_pacman:
-            if mazeDistance(p, goalCoords, gameState) < len(actionList):
-                actionList = ['Stop']
-                break
-
-        # self.actionList = actionList
-        # self.goalCoords = goalCoords
+        actionList, goalCoords = search.bfs(problem)
         return actionList
 
     def getAction(self, state):
@@ -157,12 +159,8 @@ class AnyFoodSearchProblem(PositionSearchProblem):
         The state is Pacman's position. Fill this in with a goal test that will
         complete the problem definition.
         """
+        "*** YOUR CODE HERE ***"
         x, y = state
         food = self.food
-        if (food[x][y] == True):
-            return True
-        else:
-            return False
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        return food[x][y]
 
